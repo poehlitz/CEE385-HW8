@@ -6,4 +6,3 @@ load('HW8_hazardcurve.mat')
 MAF = -log(1 - 0.02) / 50;
 % Extrapolate to Intensity Measure at MCE Level
 IM_MCE = interp1(hazard(:,2),hazard(:,1),MAF);
-
