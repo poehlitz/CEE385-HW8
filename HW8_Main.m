@@ -8,6 +8,7 @@ MAF = -log(1 - 0.02) / 50;
 % Extrapolate to Intensity Measure at MCE Level
 IM_MCE = interp1(hazard(:,2),hazard(:,1),MAF);
 IM_DBE = 2/3*IM_MCE;
+Sa = hazard(:,1);
 
 %% Fragility Read in 
 Intensity = load('Intensity.mat');
@@ -54,12 +55,18 @@ MCE_sig = interp1(Stripe, s_temp, IM_MCE);
 
 PDF_MCE = (1./(EDP.*MCE_sig.*sqrt(2*pi))).*exp(-((log(EDP)-log(MCE_median)).^2)./(2*(MCE_sig^2)));
 
+% Collapse Fragility Calculation
+handles.numberCollapse= [0,0,0,0,1,2,4,3];
+n = 7;
+output = CollapseFragility(Stripe, n, handles, Sa);
+param_collapse = output.parameters;
+
 figure 
 plot(EDP, PDF_MCE)
 title('EDP/PDF Check MCE')
 
 P_fracture_MCE = trapz(EDP, PDF_MCE.*P_C_EDP);
-disp('Fracture Probability of Connection under MCE: ')
+disp('Fracture Probability of Pre-North Connection under MCE: ')
 disp(P_fracture_MCE)
 
 %% A2
@@ -72,6 +79,9 @@ plot(EDP, PDF_DBE)
 title('EDP/PDF Check DBE')
 
 P_fracture_DBE = trapz(EDP, PDF_DBE.*P_C_EDP);
+disp('Fracture Probability of Pre-North Connection under DBE: ')
+disp(P_fracture_DBE)
+
 
 %% A3 
 % Fragility parameters for post Northridge
@@ -163,11 +173,17 @@ end
 
 L_IM_NC = sum(LStory_IM);
 
-EL_C_story = 45000*numcxn_story(:,1) + 70000*numcxn_story(:,2);
+L_C_story = 45000*numcxn_story(:,1) + 70000*numcxn_story(:,2);
+L_C = sum(L_C_story);
+
+P_C_MCE = normcdf((log(IM_MCE)-log(param_collapse(1)))/param_collapse(2));
+P_NC_MCE = 1 - P_C_MCE;
+
+L_MCE = L_IM_NC*P_NC_MCE + L_C*P_C_MCE;
+disp('Expected Loss MCE')
+disp(L_MCE)
 
 
-P_C_MCE = []
-P_NC_MCE = 
 
 
 

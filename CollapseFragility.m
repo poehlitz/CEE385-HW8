@@ -1,4 +1,4 @@
-function [handles] = CollapseFragility(stripes,n,handles)
+function [handles] = CollapseFragility(stripes,n,handles,Sa)
 
 %Hello
 
@@ -7,8 +7,9 @@ fun2 = @(v) maxLikelihood(handles.numberCollapse, n, stripes, v(1), v(2));
 v_guess = [.8, .4];
 ML_minimumParameters = fminsearch(fun2, v_guess);
 
-ML_Sa = handles.hazardDerivative(1,:);
+ML_Sa = Sa;
 ML_P = normcdf((log(ML_Sa)-log(ML_minimumParameters(1)))/ML_minimumParameters(2));
+handles.parameters = ML_minimumParameters;
 
 figure
 plot(stripes,handles.numberCollapse/n,'o',ML_Sa,ML_P,'k')
@@ -27,11 +28,11 @@ set(gca, ...
   'YMinorTick'  , 'on');
 
 %Calculate PDF of Collapse
-pdf_collapse = normcdf((log(handles.hazardDerivative(1,:))-log(ML_minimumParameters(1)))./ML_minimumParameters(2)).*handles.hazardDerivative(2,:);
-%Integrate PDF of Collapse to get Mean Annual Frequency
-MAF_c = trapz(handles.hazardDerivative(1,:), pdf_collapse);
-%Probability of Collapse in 50 years
-Prob_50 = 1 - exp(-MAF_c*50);
+% pdf_collapse = normcdf((log(handles.hazardDerivative(1,:))-log(ML_minimumParameters(1)))./ML_minimumParameters(2)).*handles.hazardDerivative(2,:);
+% %Integrate PDF of Collapse to get Mean Annual Frequency
+% MAF_c = trapz(handles.hazardDerivative(1,:), pdf_collapse);
+% %Probability of Collapse in 50 years
+% Prob_50 = 1 - exp(-MAF_c*50);
 
-handles.MAF_c = MAF_c;
-handles.Prob_50 = Prob_50;
+% handles.MAF_c = MAF_c;
+% handles.Prob_50 = Prob_50;
