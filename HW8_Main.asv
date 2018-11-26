@@ -32,7 +32,7 @@ title('1A Fragility')
 fields = fieldnames(Intensity.Intensity);
 Int = Intensity.Intensity;
 
-% Loop over all IL's (fields) and find the median at each story
+
 for i=1:numel(fields)
     data = Int.(fields{i});
     for j = 1:size(data,1)
@@ -42,7 +42,7 @@ for i=1:numel(fields)
 end
 
 % 2nd story median, sigma for MCE event
-index = 4; % For the second story
+index = 4;
 vector = zeros(1, length(Stripe));
 
 for i = 1:numel(fields)
@@ -98,8 +98,6 @@ disp('Fracture Probability of Connection under DBE: ')
 disp(P_fracture_DBE)
 
 %% B1
-
-
 
 
     
