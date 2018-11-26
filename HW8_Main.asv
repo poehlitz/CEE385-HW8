@@ -65,7 +65,17 @@ figure
 plot(EDP, PDF_MCE)
 title('EDP/PDF Check MCE')
 
-P_fracture_MCE = trapz(EDP, PDF_MCE.*P_C_EDP);
+%Probability of Fracture Given No Collapse
+P_fracture_MCE_NC = trapz(EDP, PDF_MCE.*P_C_EDP);
+P_fracture_C = 1; %Assume if building collapses the connnection fractures
+
+%Calculate Probability of Collapse Using Fragility Function
+P_C_MCE = normcdf((log(IM_MCE)-log(param_collapse(1)))/param_collapse(2));
+P_NC_MCE = 1 - P_C_MCE;
+
+%Probability of Fracture Given MCE
+P_fracture_MCE = P_fracture_MCE_NC*P_NC_MCE + P_fracture_C*P_C_MCE;
+
 disp('Fracture Probability of Pre-North Connection under MCE: ')
 disp(P_fracture_MCE)
 
@@ -78,7 +88,16 @@ figure
 plot(EDP, PDF_DBE)
 title('EDP/PDF Check DBE')
 
-P_fracture_DBE = trapz(EDP, PDF_DBE.*P_C_EDP);
+%Probabilty of Fracture Given No Collapse
+P_fracture_DBE_NC = trapz(EDP, PDF_DBE.*P_C_EDP);
+
+%Probability of Collapse from Fragility Function
+P_C_DBE = normcdf((log(IM_DBE)-log(param_collapse(1)))/param_collapse(2));
+P_NC_DBE = 1 - P_C_DBE;
+
+%Probability of Fracture Given DBE
+P_fracture_DBE = P_fracture_DBE_NC*P_NC_DBE + P_fracture_C*P_C_DBE;
+
 disp('Fracture Probability of Pre-North Connection under DBE: ')
 disp(P_fracture_DBE)
 
@@ -102,6 +121,9 @@ disp('Fracture Probability of Connection under MCE: ')
 disp(P_fracture_MCE)
 
 P_fracture_DBE = trapz(EDP, PDF_DBE.*P_C_EDP_prenorth);
+
+%Probability of Fracture Given MCE
+P_fracture_MCE = P_fracture_MCE_NC*P_NC_MCE + P_fracture_C*P_C_MCE;
 
 disp('Fracture Probability of Connection under DBE: ')
 disp(P_fracture_DBE)
@@ -179,7 +201,7 @@ L_C = sum(L_C_story);
 P_C_MCE = normcdf((log(IM_MCE)-log(param_collapse(1)))/param_collapse(2));
 P_NC_MCE = 1 - P_C_MCE;
 
-L_MCE = L_IM_NC*P_NC_MCE + EL_C*P_C_MCE;
+L_MCE = L_IM_NC*P_NC_MCE + L_C*P_C_MCE;
 disp('Expected Loss MCE')
 disp(L_MCE)
 
