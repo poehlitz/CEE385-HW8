@@ -191,13 +191,13 @@ numfloors = 5;
 PDF_MCE_story = zeros(numfloors, length(EDP));
 for j = 1:numfloors %loop over stories
     for i = 1:numel(fields) %loop over stripes
-        m_temp(i) = med.(fields{i})(j); % take median of values from each GM
-        s_temp(i) = sigmaln_t.(fields{i})(j); %standard deviations of values from each GM
+        m_story_stripe(j,i) = med.(fields{i})(j); % take median of values from each GM
+        s_story_stripe(j,i) = sigmaln_t.(fields{i})(j); %standard deviations of values from each GM
     end
 
     %Linearly interpolate for value at exact intensity performing analysis at
-    MCE_median = interp1(Stripe, m_temp, IM_MCE);
-    MCE_sig = interp1(Stripe, s_temp, IM_MCE);
+    MCE_median = interp1(Stripe, m_story_stripe(j,:), IM_MCE);
+    MCE_sig = interp1(Stripe, s_story_stripe(j,:), IM_MCE);
 
     %Calculation the probability of observing each EDP value at each story
     %given MCE
@@ -230,8 +230,64 @@ L_MCE = L_IM_NC*P_NC_MCE + L_C*P_C_MCE;
 disp('Expected Loss MCE')
 disp(L_MCE)
 
+%% B2 - Function of Loss v. IM
 
+% Interpolate Median Values from Stripes to all IM values
+m_Story_IM = zeros(numfloors,size(hazard,1));
+for i = 1:numfloors
+    clear a b 
+    a = interp1([0,Stripe], [0,m_story_stripe(i,:)], hazard(:,1));
+    b = a(~isnan(a));
+    a(isnan(a)) = b(end);
+    m_Story_IM (i,:) = a; 
+end
 
+% Interpolate Dispersion Values from Stripes to all IM values
+s_Story_IM = zeros(numfloors,size(hazard,1));
+for i = 1:numfloors
+    clear a b 
+    a = interp1([0,Stripe], [0,s_story_stripe(i,:)], hazard(:,1));
+    b = a(~isnan(a));
+    a(isnan(a)) = b(end);
+    s_Story_IM (i,:) = a; 
+end
 
+%Find Probability of Each EDP at Each IM Level Per Story
+PDF_story = zeros(numfloors, length(EDP), size(hazard,1));
+for i = 1:numfloors % Loop through every story
+    for j= 1:length(EDP) %Loop through every EDP
+    PDF_story(i, j, :) = (1./(EDP(j).*s_Story_IM(i,:).*sqrt(2*pi))).*exp(-((log(EDP(j))-log(m_Story_IM(i,:))).^2)./(2*(s_Story_IM(i,:).^2)));
+    end
+end
 
+for i=1:size(hazard,1)
+    for j = 1:numfloors
+    L_IM_story_NC (i,j) = trapz(EDP,PDF_story(j,:,i).*EL_EDP_Story(j,:));
+    end
+end
+L_IM_NC = sum(L_IM_story,2);
 
+%Probability of Collapse at Each IM
+P_C_IM = normcdf((log(hazard(:,1))-log(param_collapse(1)))/param_collapse(2));
+P_NC_IM = 1 - P_C_IM ; 
+
+%Expected Loss at Each IM
+L_IM = L_C*P_C_IM + P_NC_IM.*L_IM_NC;
+
+figure
+plot(hazard(:,1),L_IM,hazard(:,1),P_NC_IM.*L_IM_NC,hazard(:,1),L_C*P_C_IM)
+legend('Total','NC','C')
+title('Loss v. IM')
+xlabel('Sa (g)')
+ylabel('Cost ($)')
+
+figure
+plot(hazard(:,1),L_IM_NC)
+title('Loss Given no Collapse')
+
+figure
+plot(Stripe,m_story_stripe)
+title('Median EDP Values at Stripes')
+
+deriv = [diff(hazard(:,2))/(hazard(1,1)-hazard(2,1));0];
+EAL = trapz(hazard(:,1),L_IM.*deriv);
