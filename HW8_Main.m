@@ -61,6 +61,9 @@ n = 7;
 output = CollapseFragility(Stripe, n, handles, Sa);
 param_collapse = output.parameters;
 
+P_C_MCE = normcdf((log(IM_MCE)-log(param_collapse(1)))/param_collapse(2));
+P_NC_MCE = 1 - P_C_MCE;
+
 figure 
 plot(EDP, PDF_MCE)
 title('EDP/PDF Check MCE')
