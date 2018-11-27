@@ -37,7 +37,7 @@ Int = Intensity.Intensity;
 for i=1:numel(fields)
     data = Int.(fields{i});
     for j = 1:size(data,1)
-        med.(fields{i})(j,1) = median(data(j,:));
+        med.(fields{i})(j,1) = geomean(data(j,:));
         sigmaln_t.(fields{i})(j,1) = std(log(data(j,:)));
     end
 end
@@ -235,17 +235,18 @@ for i = 1:numfloors
     clear a b 
     a = interp1([0,Stripe], [0,m_story_stripe(i,:)], hazard(:,1));
     b = a(~isnan(a));
-    a(isnan(a)) = b(end);
+    %a(isnan(a)) = b(end);
+    a(isnan(a)) = b(end)/Stripe(end)*hazard(isnan(a),1);
     m_Story_IM (i,:) = a; 
 end
 
 % Interpolate Dispersion Values from Stripes to all IM values
 s_Story_IM = zeros(numfloors,size(hazard,1));
 for i = 1:numfloors
-    clear a b 
+    clear a b
     a = interp1([0,Stripe], [0,s_story_stripe(i,:)], hazard(:,1));
     b = a(~isnan(a));
-    a(isnan(a)) = b(end);
+    a(isnan(a)) = b(end)/Stripe(end)*hazard(isnan(a),1);
     s_Story_IM (i,:) = a; 
 end
 
@@ -257,12 +258,16 @@ for i = 1:numfloors % Loop through every story
     end
 end
 
+figure
+plot(hazard(:,1),(1./(EDP(140).*s_Story_IM(1,:).*sqrt(2*pi))).*exp(-((log(EDP(140))-log(m_Story_IM(1,:))).^2)./(2*(s_Story_IM(1,:).^2))))
+
 for i=1:size(hazard,1)
     for j = 1:numfloors
     L_IM_story_NC (i,j) = trapz(EDP,PDF_story(j,:,i).*EL_EDP_Story(j,:));
     end
 end
-L_IM_NC = sum(L_IM_story,2);
+
+L_IM_NC = sum(L_IM_story_NC,2);
 
 %Probability of Collapse at Each IM
 P_C_IM = normcdf((log(hazard(:,1))-log(param_collapse(1)))/param_collapse(2));
@@ -280,11 +285,29 @@ ylabel('Cost ($)')
 
 figure
 plot(hazard(:,1),L_IM_NC)
-title('Loss Given no Collapse')
+title('Total Loss Given No Collapse')
+xlabel('Sa (g)')
+ylabel('Cost ($)')
 
 figure
 plot(Stripe,m_story_stripe)
 title('Median EDP Values at Stripes')
+xlabel('Sa (g)')
+ylabel('Median IDR')
+
+figure
+plot(hazard(:,1),m_Story_IM)
+title('Median EDP Values')
+xlabel('Sa (g)')
+ylabel('Median IDR')
+legend('Story 5','Story 4', 'Story 3', 'Story 2', 'Story 1')
+
+figure
+plot(hazard(:,1),s_Story_IM)
+title('Standard Deviation Median EDP Values')
+xlabel('Sa (g)')
+ylabel('Median IDR')
+legend('Story 5','Story 4', 'Story 3', 'Story 2', 'Story 1')
 
 deriv = [diff(hazard(:,2))/(hazard(1,1)-hazard(2,1));0];
 EAL = trapz(hazard(:,1),L_IM.*deriv);
