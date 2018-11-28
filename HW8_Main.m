@@ -63,7 +63,14 @@ param_collapse = output.parameters;
 
 figure 
 plot(EDP, PDF_MCE)
-title('EDP/PDF Check MCE')
+title('Probability Distribution of EDP Given MCE')
+grid on
+set(gca, ...
+  'Box'         , 'off'     , ...
+  'TickDir'     , 'out'     , ...
+  'TickLength'  , [.02 .02] , ...
+  'XMinorTick'  , 'on'      , ...
+  'YMinorTick'  , 'on');
 
 %Probability of Fracture Given No Collapse
 P_fracture_MCE_NC = trapz(EDP, PDF_MCE.*P_C_EDP);
@@ -86,7 +93,14 @@ DBE_sig = interp1(Stripe, s_temp, IM_DBE);
 PDF_DBE = (1./(EDP.*DBE_sig.*sqrt(2*pi))).*exp(-((log(EDP)-log(DBE_median)).^2)./(2*(DBE_sig^2)));
 figure 
 plot(EDP, PDF_DBE)
-title('EDP/PDF Check DBE')
+title('Probability Distribution of EDP Given DBE')
+grid on
+set(gca, ...
+  'Box'         , 'off'     , ...
+  'TickDir'     , 'out'     , ...
+  'TickLength'  , [.02 .02] , ...
+  'XMinorTick'  , 'on'      , ...
+  'YMinorTick'  , 'on');
 
 %Probabilty of Fracture Given No Collapse
 P_fracture_DBE_NC = trapz(EDP, PDF_DBE.*P_C_EDP);
@@ -249,8 +263,8 @@ for i = 1:numfloors
     clear a b 
     a = interp1([0,Stripe], [0,m_story_stripe(i,:)], hazard(:,1));
     b = a(~isnan(a));
-    %a(isnan(a)) = b(end);
-    a(isnan(a)) = b(end)/Stripe(end)*hazard(isnan(a),1);
+    a(isnan(a)) = b(end);
+    %a(isnan(a)) = b(end)/Stripe(end)*hazard(isnan(a),1);
     m_Story_IM (i,:) = a; 
 end
 
@@ -260,7 +274,8 @@ for i = 1:numfloors
     clear a b
     a = interp1([0,Stripe], [0,s_story_stripe(i,:)], hazard(:,1));
     b = a(~isnan(a));
-    a(isnan(a)) = b(end)/Stripe(end)*hazard(isnan(a),1);
+    a(isnan(a)) = b(end);
+    %a(isnan(a)) = b(end)/Stripe(end)*hazard(isnan(a),1);
     s_Story_IM (i,:) = a; 
 end
 
